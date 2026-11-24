@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Даты по истории</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg: var(--tg-theme-secondary-bg-color, #efeff4);
+  --card: var(--tg-theme-section-bg-color, var(--tg-theme-bg-color, #ffffff));
+  --text: var(--tg-theme-text-color, #000000);
+  --hint: var(--tg-theme-hint-color, #8e8e93);
+  --accent: var(--tg-theme-button-color, #2481cc);
+  --accent-text: var(--tg-theme-button-text-color, #ffffff);
+  --link: var(--tg-theme-link-color, #2481cc);
+  --sep: color-mix(in srgb, var(--hint) 25%, transparent);
+  --ok: #34c759; --bad: #ff3b30; --gold: #c8962e;
+}
+@media (prefers-color-scheme: dark){
+  :root:not(.tg){ --bg:#000; --card:#1c1c1e; --text:#fff; --hint:#8e8e93; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Roboto","Segoe UI",sans-serif}
+body{min-height:100vh;padding:12px 16px calc(24px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+.screen{max-width:520px;margin:0 auto;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hidden{display:none!important}
+
+/* --- главная --- */
+.hero{text-align:center;padding:18px 0 20px}
+.emblem{width:72px;height:72px;margin:0 auto 12px;border-radius:22px;display:grid;place-items:center;font-size:38px;
+  background:linear-gradient(145deg,#d4a64a,#9c6b1f);box-shadow:0 6px 18px rgba(156,107,31,.35)}
+.hero h1{font-size:24px;margin:0 0 4px;letter-spacing:-.3px}
+.hero p{margin:0;color:var(--hint);font-size:15px}
+.section-title{font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--hint);margin:22px 4px 8px}
+.card{background:var(--card);border-radius:14px;overflow:hidden}
+.mode{display:flex;gap:14px;align-items:center;width:100%;text-align:left;padding:14px 16px;transition:background .15s}
+.mode:active{background:color-mix(in srgb,var(--hint) 12%,transparent)}
+.mode+.mode{border-top:.5px solid var(--sep)}
+.mode .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#fff}
+.ic.a{background:linear-gradient(145deg,#5ac8fa,#2481cc)} .ic.b{background:linear-gradient(145deg,#ffb340,#ff7a00)}
+.mode .body{flex:1;min-width:0}
+.mode .t{font-weight:600}
+.mode .d{color:var(--hint);font-size:14px;margin-top:1px}
+.mode .chev{color:var(--hint);font-size:22px}
+.prog{height:4px;border-radius:2px;background:var(--sep);margin-top:8px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
+.stats{display:grid;grid-template-columns:repeat(3,1fr)}
+.stat{padding:14px 8px;text-align:center}
+.stat+.stat{border-left:.5px solid var(--sep)}
+.stat b{display:block;font-size:22px}
+.stat span{font-size:12px;color:var(--hint)}
+.row{padding:12px 16px;display:flex;gap:12px;align-items:baseline}
+.row+.row{border-top:.5px solid var(--sep)}
+.row .y{flex:none;font-weight:600;color:var(--gold);min-width:84px}
+.row .e{flex:1;font-size:15px}
+.row .n{color:var(--bad);font-size:13px;flex:none}
+.empty{padding:14px 16px;color:var(--hint);font-size:15px}
+.link{display:block;margin:22px auto 0;color:var(--bad);font-size:15px}
+.foot{color:var(--hint);font-size:13px;margin:8px 4px 0;line-height:1.4}
+
+/* --- вопрос --- */
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.top .bar{flex:1;height:6px;border-radius:3px;background:var(--sep);overflow:hidden}
+.top .bar i{display:block;height:100%;background:var(--accent);transition:width .4s}
+.top .cnt{font-size:13px;color:var(--hint);font-variant-numeric:tabular-nums}
+.fire{font-size:14px;font-weight:600;color:#ff7a00;min-width:38px;text-align:right}
+.back{color:var(--link);font-size:16px;padding:4px 0}
+.q{background:var(--card);border-radius:18px;padding:22px 20px;text-align:center;margin-bottom:14px}
+.q .lbl{font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--hint);margin-bottom:10px}
+.q .ev{font-size:20px;font-weight:600;line-height:1.3}
+.q .yr{font-size:40px;font-weight:700;letter-spacing:-1px;color:var(--gold)}
+.q .note{font-size:13px;color:var(--hint);margin-top:8px}
+.opts{display:grid;gap:10px}
+.opts.grid{grid-template-columns:1fr 1fr}
+.opt{background:var(--card);border-radius:14px;padding:16px 14px;text-align:left;font-size:16px;
+  border:2px solid transparent;transition:transform .1s,background .2s,border-color .2s}
+.opts.grid .opt{text-align:center;font-size:20px;font-weight:600;padding:20px 8px;font-variant-numeric:tabular-nums}
+.opt:active:not([disabled]){transform:scale(.97)}
+.opt[disabled]{cursor:default}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--card))}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card));animation:shake .35s}
+.opt.dim{opacity:.45}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.res{background:var(--card);border-radius:14px;padding:14px 16px;margin-top:14px;animation:in .25s ease}
+.res .h{font-weight:700;font-size:17px;margin-bottom:6px}
+.res .h.ok{color:var(--ok)} .res .h.bad{color:var(--bad)}
+.res p{margin:6px 0 0;font-size:15px}
+.res .muted{color:var(--hint);font-size:14px}
+.res b.y{color:var(--gold)}
+.next{display:block;width:100%;margin-top:14px;padding:15px;border-radius:12px;background:var(--accent);
+  color:var(--accent-text);font-weight:600;font-size:16px}
+.next:active{opacity:.85}
+.tg .next{display:none} /* в Telegram используется нативная MainButton */
+</style>
+</head>
+<body>
+
+<div id="home" class="screen">
+  <div class="hero">
+    <div class="emblem">🏛</div>
+    <h1>Даты по истории России</h1>
+    <p>46 дат · от 862 до 1583 года</p>
+  </div>
+
+  <div class="section-title">Режимы</div>
+  <div class="card">
+    <button class="mode" data-mode="date">
+      <div class="ic a">📜</div>
+      <div class="body"><div class="t">Событие → дата</div>
+        <div class="d" id="d-date"></div><div class="prog"><i id="p-date"></i></div></div>
+      <div class="chev">›</div>
+    </button>
+    <button class="mode" data-mode="event">
+      <div class="ic b">📅</div>
+      <div class="body"><div class="t">Дата → событие</div>
+        <div class="d" id="d-event"></div><div class="prog"><i id="p-event"></i></div></div>
+      <div class="chev">›</div>
+    </button>
+  </div>
+
+  <div class="section-title">Статистика</div>
+  <div class="card stats">
+    <div class="stat"><b id="s-acc">—</b><span>точность</span></div>
+    <div class="stat"><b id="s-ans">0</b><span>ответов</span></div>
+    <div class="stat"><b id="s-best">0</b><span>лучшая серия</span></div>
+  </div>
+
+  <div class="section-title">Чаще всего ошибки</div>
+  <div class="card" id="hard"></div>
+
+  <p class="foot">Каждый круг — все 46 дат по одному разу в случайном порядке. Ошибки возвращаются через несколько вопросов. Дата выучена после двух верных ответов подряд.</p>
+  <button class="link" id="reset">Сбросить прогресс</button>
+</div>
+
+<div id="quiz" class="screen hidden">
+  <div class="top">
+    <button class="back" id="back">‹ Назад</button>
+    <div class="bar"><i id="q-bar"></i></div>
+    <div class="cnt" id="q-cnt"></div>
+    <div class="fire" id="q-fire"></div>
+  </div>
+  <div class="q" id="q-card"></div>
+  <div class="opts" id="q-opts"></div>
+  <div id="q-res"></div>
+  <button class="next hidden" id="next">Дальше</button>
+</div>
+
+<script>
+/* ======================== данные (формулировки дословно с листа) ======================== */
+const S='single',P='pair',R='range';
+const EVENTS=[
+[[S,[862]],"призвание варягов"],
+[[S,[882]],"захват Олегом Киева, объединение Киева и Новгорода"],
+[[P,[907,911]],"походы Олега на Царьград"],
+[[P,[941,944]],"походы Игоря на Царьград"],
+[[S,[945]],"убийство Игоря древлянами"],
+[[R,[964,972]],"походы Святослава"],
+[[S,[980]],"языческая реформа Владимира"],
+[[S,[988]],"крещение Руси"],
+[[S,[1016]],"начало составления Русской Правды"],
+[[S,[1036]],"разгром печенегов под Киевом"],
+[[S,[1097]],"Любечский съезд"],
+[[P,[1111,1113]],"походы на половцев Мономаха"],
+[[S,[1147]],"первое упоминание о Москве в летописи"],
+[[S,[1185]],"Поход князя Игоря Новгород Северского на половцев, которому посвящено «Слово о полку Игореве»"],
+[[S,[1206]],"Курултай. Избрание Чингиз-хана"],
+[[S,[1223]],"битва на реке Калке"],
+[[R,[1237,1238]],"походы Батыя на Северо-Восточную Русь"],
+[[S,[1238]],"битва на реке Сити"],
+[[R,[1239,1240]],"походы Батыя на Юго-Западную Русь"],
+[[S,[1240]],"Невская битва против шведов"],
+[[S,[1242]],"Ледовое побоище"],
+[[S,[1318]],"Москва впервые получает ярлык на великое княжение"],
+[[S,[1327]],"подавление антиордынского восстания в Твери против баскака Щелкана"],
+[[S,[1378]],"битва на Воже"],
+[[S,[1380]],"Куликовская битва"],
+[[S,[1382]],"набег Тохтамыша на Москву"],
+[[S,[1471]],"битва на Шелони с Новгородом. Марфа Борецкая"],
+[[S,[1478]],"присоединение Новгорода"],
+[[S,[1480]],"стояние на реке Угре"],
+[[S,[1485]],"принятие иваном III титула Государя всея Руси, Русь начинается именоваться Россией"],
+[[S,[1485]],"присоединение Твери"],
+[[S,[1497]],"издание Судебника Ивана III. Появление Юрьева дня"],
+[[S,[1510]],"присоединение Пскова"],
+[[S,[1514]],"присоединение Смоленска"],
+[[S,[1547]],"венчание Ивана Грозного на царство."],
+[[S,[1549]],"созыв первого Земского собора"],
+[[S,[1550]],"издание Судебника Ивана Грозного"],
+[[S,[1550]],"создание стрелецкого войска"],
+[[S,[1552]],"присоединение Казани к Москве"],
+[[S,[1556]],"Присоединение Астрахани к Москве"],
+[[R,[1558,1583]],"Ливонская война"],
+[[S,[1564]],"начало книгопечатания на Руси."],
+[[R,[1565,1572]],"опричнина"],
+[[R,[1581,1585]],"поход Ермака в Сибирь."],
+[[S,[1582]],"Ям-Запольский мир с Речью Посполитой"],
+[[S,[1583]],"Плюсское перемирие со Швецией"],
+];
+const N=EVENTS.length, MIN_GAP=4, MASTERED=2;
+const short=([k,y])=>k===S?`${y[0]}`:k===P?`${y[0]}, ${y[1]}`:`${y[0]}–${y[1]}`;
+const full=([k,y])=>k===S?`${y[0]} г.`:k===P?`${y[0]}, ${y[1]} гг.`:`${y[0]}-${y[1]} гг.`;
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const sample=(a,k)=>shuffle(a.slice()).slice(0,k);
+
+/* ======================== хранилище: Telegram CloudStorage или localStorage ======================== */
+const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
+const cloud=tg&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.9')?tg.CloudStorage:null;
+const store={
+  get(key){return new Promise(res=>{
+    if(cloud) cloud.getItem(key,(e,v)=>res(e?null:v||null));
+    else { try{res(localStorage.getItem(key))}catch(_){res(null)} }
+  })},
+  set(key,val){
+    if(cloud) cloud.setItem(key,val,()=>{});
+    try{localStorage.setItem(key,val)}catch(_){}
+  }
+};
+const newState=()=>({queue:[],recent:[],round:0,seen:[],stats:{},streak:0,best:0});
+const state={date:newState(),event:newState()};
+const save=m=>store.set('m_'+m,JSON.stringify(state[m]));
+
+/* ======================== порядок вопросов ======================== */
+const isWeak=(st,e)=>{const s=st.stats[e];return s&&s[0]>s[1]&&s[2]<MASTERED};
+function refill(st){
+  const key={};for(let e=0;e<N;e++)key[e]=Math.random()-(isWeak(st,e)?.6:0);
+  let ids=[...Array(N).keys()].sort((a,b)=>key[a]-key[b]);
+  const recent=st.recent.slice(-MIN_GAP);
+  ids=ids.filter(e=>!recent.includes(e)).concat(ids.filter(e=>recent.includes(e)));
+  st.queue=ids;st.round++;st.seen=[];
+}
+function nextEvent(st){
+  const blocked=st.recent.slice(-(MIN_GAP-1));
+  if(!st.queue.some(e=>!blocked.includes(e))){
+    const left=st.queue;refill(st);
+    for(const e of left) if(!st.queue.slice(0,6).includes(e)){
+      st.queue.splice(st.queue.indexOf(e),1);st.queue.splice(rnd(3,6),0,e);
+    }
+  }
+  const i=st.queue.findIndex(e=>!blocked.includes(e));
+  return st.queue.splice(i<0?0:i,1)[0];
+}
+function record(st,e,ok){
+  const s=st.stats[e]||(st.stats[e]=[0,0,0]);
+  s[0]++;
+  if(ok){s[1]++;s[2]++;st.streak++;st.best=Math.max(st.best,st.streak)}
+  else{
+    s[2]=0;st.streak=0;const q=st.queue;
+    if(!q.slice(0,6).includes(e)) q.splice(Math.min(q.length,rnd(3,5)),0,e);
+    if(!q.slice(8).includes(e)) q.splice(Math.min(q.length,rnd(10,15)),0,e);
+  }
+  st.recent=st.recent.concat(e).slice(-10);
+  if(!st.seen.includes(e)) st.seen.push(e);
+}
+const mastered=st=>Object.values(st.stats).filter(s=>s[2]>=MASTERED).length;
+
+/* ======================== неверные варианты ======================== */
+function synthetic([k,y]){
+  const out=[];
+  if(k===S){
+    for(const d of [1,2,3,4,5,6,8,10,12,20]) out.push([k,[y[0]-d]],[k,[y[0]+d]]);
+    const s=String(y[0]),sw=+(s.slice(0,-2)+s.at(-1)+s.at(-2));
+    if(sw!==y[0]) out.push([k,[sw]]);
+  }else{
+    const [a,b]=y;
+    for(const d of [1,2,3,4,5,7,10]) out.push([k,[a-d,b-d]],[k,[a+d,b+d]]);
+    for(const d of [1,2,3,4]){out.push([k,[a,b+d]],[k,[a-d,b]],[k,[a+d,b]]);if(b-d>a)out.push([k,[a,b-d]])}
+  }
+  return out.filter(d=>d[1][0]>800&&d[1].at(-1)<1700&&(d[0]===S||d[1][0]<d[1][1]));
+}
+function dateOptions(eid){
+  const c=EVENTS[eid][0],cl=short(c),c0=c[1][0];
+  const seenL=new Set([cl]);
+  let real=[];for(const [d] of EVENTS) if(d[0]===c[0]&&!seenL.has(short(d))&&!real.some(r=>short(r)===short(d))) real.push(d);
+  real=real.sort((a,b)=>Math.abs(a[1][0]-c0)-Math.abs(b[1][0]-c0)).slice(0,5).filter(d=>Math.abs(d[1][0]-c0)<=150);
+  const picked=[];
+  for(const d of sample(real,Math.min(real.length,rnd(1,2)))){picked.push(d);seenL.add(short(d))}
+  for(const d of shuffle(synthetic(c))){if(picked.length>=3)break;if(!seenL.has(short(d))){picked.push(d);seenL.add(short(d))}}
+  const opts=shuffle(picked.concat([c]).map(short));
+  return {options:opts,correct:opts.indexOf(cl)};
+}
+function eventOptions(eid){
+  const cd=full(EVENTS[eid][0]);
+  const others=[...Array(N).keys()].filter(i=>full(EVENTS[i][0])!==cd)
+    .map(i=>[i,Math.abs(i-eid)+Math.random()]).sort((a,b)=>a[1]-b[1]).slice(0,7).map(x=>x[0]);
+  const ids=shuffle(sample(others,3).concat([eid]));
+  return {options:ids,correct:ids.indexOf(eid)};
+}
+
+/* ======================== интерфейс ======================== */
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const haptic=(t)=>{try{ if(!tg)return;
+  if(t==='ok'||t==='bad') tg.HapticFeedback.notificationOccurred(t==='ok'?'success':'error');
+  else tg.HapticFeedback.selectionChanged(); }catch(_){}};
+let cur=null; // текущий вопрос
+
+function renderHome(){
+  let ans=0,right=0,best=0;const hard={};
+  for(const m of ['date','event']){
+    const st=state[m],ms=mastered(st);
+    $('d-'+m).textContent=st.round?`Выучено ${ms} из ${N} · круг ${st.round}`:(m==='date'?'Выбери дату события':'Вспомни, что было в этот год');
+    $('p-'+m).style.width=(100*ms/N)+'%';
+    for(const [e,s] of Object.entries(st.stats)){ans+=s[0];right+=s[1];hard[e]=(hard[e]||0)+s[0]-s[1]}
+    best=Math.max(best,st.best);
+  }
+  $('s-acc').textContent=ans?Math.round(100*right/ans)+'%':'—';
+  $('s-ans').textContent=ans;$('s-best').textContent=best;
+  const worst=Object.keys(hard).filter(e=>hard[e]>0).sort((a,b)=>hard[b]-hard[a]).slice(0,5);
+  $('hard').innerHTML=worst.length?worst.map(e=>`<div class="row"><span class="y">${full(EVENTS[e][0])}</span><span class="e">${esc(EVENTS[e][1])}</span><span class="n">${hard[e]}×</span></div>`).join('')
+    :'<div class="empty">Пока ошибок нет — так держать</div>';
+}
+
+function show(id){
+  for(const s of ['home','quiz']) $(s).classList.toggle('hidden',s!==id);
+  window.scrollTo(0,0);
+  if(tg){ id==='quiz'?tg.BackButton.show():tg.BackButton.hide(); if(id!=='quiz') tg.MainButton.hide(); }
+}
+
+function goHome(){
+  if(cur&&!cur.answered){ // бросили вопрос — вернуть событие в круг
+    const st=state[cur.mode];
+    if(!st.queue.includes(cur.eid)&&!st.seen.includes(cur.eid)) st.queue.splice(Math.min(st.queue.length,2),0,cur.eid);
+    save(cur.mode);
+  }
+  cur=null;renderHome();show('home');
+}
+
+function topBar(st){
+  $('q-bar').style.width=(100*st.seen.length/N)+'%';
+  $('q-cnt').textContent=`${st.seen.length}/${N}`;
+  $('q-fire').textContent=st.streak>=2?`🔥${st.streak}`:'';
+}
+
+function ask(mode){
+  const st=state[mode],eid=nextEvent(st);
+  const o=mode==='date'?dateOptions(eid):eventOptions(eid);
+  cur={mode,eid,...o,answered:false};save(mode);
+  const [d,desc]=EVENTS[eid];
+  topBar(st);
+  if(mode==='date'){
+    $('q-card').innerHTML=`<div class="lbl">Когда это было?</div><div class="ev">${esc(desc)}</div>`;
+    $('q-opts').className='opts grid';
+    $('q-opts').innerHTML=o.options.map((l,i)=>`<button class="opt" data-i="${i}">${l}</button>`).join('');
+  }else{
+    const many=EVENTS.filter(x=>full(x[0])===full(d)).length>1;
+    $('q-card').innerHTML=`<div class="lbl">Что было в</div><div class="yr">${full(d)}</div>`+
+      (many?'<div class="note">В этот год было несколько событий — найди одно из них</div>':'');
+    $('q-opts').className='opts';
+    $('q-opts').innerHTML=o.options.map((e,i)=>`<button class="opt" data-i="${i}">${esc(EVENTS[e][1])}</button>`).join('');
+  }
+  $('q-res').innerHTML='';$('next').classList.add('hidden');
+  if(tg) tg.MainButton.hide();
+  show('quiz');
+}
+
+function answer(i){
+  if(!cur||cur.answered) return;
+  cur.answered=true;
+  const st=state[cur.mode],ok=i===cur.correct;
+  record(st,cur.eid,ok);save(cur.mode);haptic(ok?'ok':'bad');
+  document.querySelectorAll('#q-opts .opt').forEach((b,j)=>{
+    b.disabled=true;
+    if(j===cur.correct) b.classList.add('ok'); else if(j===i) b.classList.add('bad'); else b.classList.add('dim');
+  });
+  const [d,desc]=EVENTS[cur.eid];
+  let html=`<div class="h ${ok?'ok':'bad'}">${ok?(st.streak>=3?`Верно! 🔥 ${st.streak} подряд`:'Верно!'):'Неверно'}</div>`+
+    `<p><b class="y">${full(d)}</b> — ${esc(desc)}</p>`;
+  if(!ok){
+    if(cur.mode==='date'){
+      const l=cur.options[i],real=EVENTS.filter(x=>short(x[0])===l).map(x=>x[1]);
+      html+=real.length?`<p class="muted">А ${l} — это ${esc(real.join('; '))}</p>`:`<p class="muted">Даты ${l} в списке нет</p>`;
+    }else{
+      const [od,odesc]=EVENTS[cur.options[i]];
+      html+=`<p class="muted">«${esc(odesc)}» — это ${full(od)}</p>`;
+    }
+    html+='<p class="muted">🔁 Этот вопрос скоро вернётся</p>';
+  }
+  $('q-res').innerHTML=`<div class="res">${html}</div>`;
+  topBar(st);
+  if(tg){ tg.MainButton.setText('Дальше'); tg.MainButton.show(); }
+  else $('next').classList.remove('hidden');
+  setTimeout(()=>$('q-res').scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+/* ======================== события ======================== */
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{haptic();ask(b.dataset.mode)});
+$('q-opts').onclick=e=>{const b=e.target.closest('.opt');if(b)answer(+b.dataset.i)};
+$('next').onclick=()=>ask(cur.mode);
+$('back').onclick=goHome;
+$('reset').onclick=()=>{
+  const doReset=ok=>{if(!ok)return;for(const m of ['date','event']){state[m]=newState();save(m)}renderHome()};
+  if(tg&&tg.showConfirm) tg.showConfirm('Сбросить весь прогресс? Статистика обоих режимов обнулится.',doReset);
+  else doReset(confirm('Сбросить весь прогресс?'));
+};
+
+(async function init(){
+  if(tg){
+    document.documentElement.classList.add('tg');
+    tg.ready();tg.expand();
+    try{tg.setHeaderColor('secondary_bg_color');tg.setBackgroundColor('secondary_bg_color')}catch(_){}
+    $('back').classList.add('hidden');
+    tg.BackButton.onClick(goHome);
+    tg.MainButton.onClick(()=>{if(cur&&cur.answered)ask(cur.mode)});
+  }
+  for(const m of ['date','event']){
+    try{const v=await store.get('m_'+m);if(v)state[m]=Object.assign(newState(),JSON.parse(v))}catch(_){}
+  }
+  renderHome();
+})();
+</script>
+</body>
+</html>
